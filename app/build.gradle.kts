@@ -59,6 +59,7 @@ dependencies {
     implementation(libs.firebase.firestore.ktx)
 
     // REST com Retrofit
+
     implementation(libs.retrofit)
     implementation(libs.converter.gson)
     implementation(libs.kotlinx.coroutines.core)

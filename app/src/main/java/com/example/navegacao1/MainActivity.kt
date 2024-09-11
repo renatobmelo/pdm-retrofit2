@@ -18,7 +18,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.navegacao1.ui.telas.TelaLogin
 import com.example.navegacao1.ui.telas.TelaPrincipal
 import com.example.navegacao1.ui.theme.Navegacao1Theme
 import com.google.firebase.FirebaseApp
@@ -40,16 +39,11 @@ class MainActivity : ComponentActivity() {
                     },
                     modifier = Modifier.fillMaxSize()) { innerPadding ->
                     val navController = rememberNavController()
-                    NavHost(navController = navController, startDestination = "login") {
-                        composable("login") {
-                            TelaLogin(modifier = Modifier.padding(innerPadding), onSigninClick = {
-                                navController.navigate("principal")
-                            })
-                        }
+                    NavHost(navController = navController, startDestination = "principal") {
+
                         composable("principal") {
-                            TelaPrincipal(modifier = Modifier.padding(innerPadding), onLogoffClick = {
-                                navController.navigate("login")
-                            })
+                            TelaPrincipal(modifier = Modifier.padding(innerPadding))
+                            }
                         }
                     }
 
@@ -57,7 +51,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
+
 
 @Composable
 fun Greeting(name: String, modifier: Modifier = Modifier) {

@@ -1,90 +1,107 @@
 package com.example.navegacao1.ui.telas
 
 import android.util.Log
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import com.example.navegacao1.model.dados.Endereco
+import androidx.compose.ui.unit.dp
 import com.example.navegacao1.model.dados.RetrofitClient
 import com.example.navegacao1.model.dados.Usuario
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-
 @Composable
-fun TelaPrincipal(modifier: Modifier = Modifier, onLogoffClick: () -> Unit) {
-    var scope = rememberCoroutineScope()
+fun TelaPrincipal(modifier: Modifier = Modifier) {
+    var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) }
+    var nome by remember { mutableStateOf("") }
+    var idToRemove by remember { mutableStateOf("") }
+    val scope = rememberCoroutineScope()
 
-    Column(modifier = modifier) {
-        Text(text = "Tela Principal")
-        var usuarios by remember { mutableStateOf<List<Usuario>>(emptyList()) }
-        var endereco by remember { mutableStateOf<Endereco>(Endereco()) }
+    LaunchedEffect(Unit) {
+        scope.launch {
+            usuarios = getUsuarios()
+        }
+    }
 
-        LaunchedEffect(Unit) {
-            scope.launch {
-                Log.d("principal", "aqui")
-                usuarios = getUsuarios()
+    Column(modifier = modifier.padding(16.dp)) {
+        Text(text = "Tela Principal", style = MaterialTheme.typography.headlineMedium)
 
-//                Log.d("principal", getEndereco().logradouro)
-//                endereco = getEndereco()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Row {
+            TextField(
+                value = nome,
+                onValueChange = { nome = it },
+                label = { Text("Nome do Usuário") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = {
+                val novoUsuario = Usuario(id = "", nome = nome, senha = "")
+                scope.launch {
+                    inserirUsuario(novoUsuario)
+                    usuarios = getUsuarios()
+                }
+            }) {
+                Text("Adicionar Usuário")
             }
         }
 
-        Text(endereco.logradouro)
+        Spacer(modifier = Modifier.height(16.dp))
 
-        Button(onClick = {
-//            scope.launch(Dispatchers.IO) {
-//                usuarioDAO.buscar( callback = { usuariosRetornados ->
-//                    usuarios.clear()
-//                    usuarios.addAll(usuariosRetornados)
-//                })
-//            }
-        }) {
-            Text("Carregar")
-        }
-        Button(onClick = { onLogoffClick() }) {
-            Text("Sair")
+        Row {
+            TextField(
+                value = idToRemove,
+                onValueChange = { idToRemove = it },
+                label = { Text("ID do Usuário a Remover") },
+                modifier = Modifier.weight(1f)
+            )
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(onClick = {
+                scope.launch {
+                    if (idToRemove.isNotEmpty()) {
+                        removerUsuario(idToRemove)
+                        usuarios = getUsuarios()
+                    }
+                }
+            }) {
+                Text("Remover Usuário")
+            }
         }
 
-        //Carrega sob demanda à medida que o usuário rola na tela
+        Spacer(modifier = Modifier.height(16.dp))
+
         LazyColumn {
             items(usuarios) { usuario ->
-                //TODO melhore esse card. Estão colados, e com pouca informação. Deixe mais
-                // elegante.
-                Card(modifier = Modifier.fillMaxWidth()) {
-                    Column {
-                        Text(text = usuario.nome)
+                Card(modifier = Modifier.fillMaxWidth().padding(4.dp)) {
+                    Column(modifier = Modifier.padding(8.dp)) {
+                        Text(text = "ID: ${usuario.id}")
+                        Text(text = "Nome: ${usuario.nome}")
                     }
                 }
             }
         }
     }
-
 }
 
-suspend fun getUsuarios(): List<Usuario> {
+private suspend fun getUsuarios(): List<Usuario> {
     return withContext(Dispatchers.IO) {
         RetrofitClient.usuarioService.listar()
     }
 }
 
-suspend fun getEndereco(): Endereco {
-    return withContext(Dispatchers.IO) {
-        RetrofitClient.usuarioService.getEndereco()
+private suspend fun inserirUsuario(usuario: Usuario) {
+    withContext(Dispatchers.IO) {
+        RetrofitClient.usuarioService.adicionar(usuario)
+    }
+}
+
+private suspend fun removerUsuario(id: String) {
+    withContext(Dispatchers.IO) {
+        RetrofitClient.usuarioService.excluir(id)
     }
 }
